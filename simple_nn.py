@@ -1,8 +1,6 @@
 from pathlib import Path
 import sys
 
-from torch.nn.functional import one_hot
-
 PROJECT_DIR = Path(__file__).resolve().parent
 sys.path.append(str(PROJECT_DIR))
 
