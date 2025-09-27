@@ -12,6 +12,7 @@ from collections import defaultdict
 from matplotlib import pyplot as plt
 
 
+ 
 class SimpleNN:
     def __init__(self, input_size, num_classes, learning_rate=0.01):
         self.weights_ = torch.randn(num_classes, input_size)
@@ -55,15 +56,16 @@ def read_data(folder_path):
             labels.extend([file.name] * load_file.shape[0])
             group[file.name] = i
     return (
-        torch.tensor(np.concatenate(x, axis=0),
-        dtype=torch.float32),
-        torch.tensor(np.concatenate(y, axis=0),
-        dtype=torch.float32), labels, group
+        torch.tensor(np.concatenate(x, axis=0), dtype=torch.float32),
+        torch.tensor(np.concatenate(y, axis=0),dtype=torch.float32),
+        labels,
+        group
     )
 
 if __name__ == '__main__':
     x, y, labels, category = read_data(PROJECT_DIR / 'datasets/quick_draw')
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+    x_train, x_test, y_train, y_test = torch.tensor(x_train), torch.tensor(x_test), torch.tensor(y_train), torch.tensor(y_test)
 
     scaler = StandardScaler()
     scaler.fit(x_train.numpy())
