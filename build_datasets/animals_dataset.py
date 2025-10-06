@@ -1,6 +1,7 @@
 from pathlib import Path
 import sys
 
+from numpy import mask_indices
 from torchvision import transforms
 ROOT_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(ROOT_DIR))
@@ -26,7 +27,7 @@ class AnimalsDataset(Dataset):
                 self.labels.append(idx)
 
     def __len__(self):
-        return len(self.labels)
+        return int(len(self.labels) * 1)
 
     def __getitem__(self, index):
         data = Image.open(self.path_files[index]).convert('RGB')
@@ -51,3 +52,5 @@ if __name__ == '__main__':
     for images, labels in training_dataloader:
         print(images.shape)
         print(labels)
+
+

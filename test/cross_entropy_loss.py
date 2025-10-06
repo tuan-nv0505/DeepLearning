@@ -14,9 +14,6 @@ def cross_entropy_loss(logits, labels, dim=0):
     loss_sample = -torch.sum(torch.log(probs) * labels, dim=dim)
     return torch.mean(loss_sample)
 
-class NeuralNetwork:
-    def __init__(self,):
-        self.weights_ = None
 
 if __name__ == '__main__':
     weight = torch.tensor([

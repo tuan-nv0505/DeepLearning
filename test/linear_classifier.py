@@ -5,8 +5,7 @@ sys.path.append(str(PROJECT_DIR))
 
 import numpy as np
 from collections import defaultdict
-import cv2
-
+import cv2 #type:ignore
 
 def read_data(folder_path: Path):
     data = defaultdict(lambda: np.array([]))
