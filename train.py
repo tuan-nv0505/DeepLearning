@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 from torchvision.transforms import Compose, ToTensor, Resize
 from torch.utils.data import DataLoader
+from sklearn.metrics import classification_report
 
 
 if __name__ == '__main__':
@@ -42,6 +43,8 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
+    if torch.cuda.is_available():
+        model.cuda()
 
     for epoch in range(num_epochs):
         model.train()
@@ -59,23 +62,23 @@ if __name__ == '__main__':
             optimizer.step()
 
         model.eval()
-        all_labels = []
         all_predictions = []
-        for images, labels in test_dataloader:
+        all_labels = []
+        for iter, (images, labels) in enumerate(test_dataloader):
             all_labels.extend(labels)
             if torch.cuda.is_available():
                 images = images.cuda()
                 labels = labels.cuda()
 
             with torch.no_grad():
-                output = model(images)
-                loss = criterion(output, labels)
-                indices = torch.argmax(output)
+                predictions = model(images)   # predictions shape 64x10
+                indices = torch.argmax(predictions.cpu(), dim=1)
                 all_predictions.extend(indices)
-
-        print(all_labels)
-        print('-------------')
-        print(all_predictions)
+                loss_value = criterion(predictions, labels)
+        all_labels = [label.item() for label in all_labels]
+        all_predictions = [prediction.item() for prediction in all_predictions]
+        print("Epoch {}".format(epoch+1))
+        print(classification_report(all_labels, all_predictions))
 
 
 
