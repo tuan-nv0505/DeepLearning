@@ -9,7 +9,11 @@ import torch
 
 
 if __name__ == '__main__':
-    a = torch.tensor([1,2,3,4,5])
-    x = torch.zeros_like(a)
-    print(a)
-    print(x)
+    x = torch.tensor([1.0], requires_grad=True)
+    y = x**2 + 2*x -3
+    z = y**2 + 2*y
+
+    y.retain_grad()
+    z.backward()
+    print(x.grad)
+    print(y.grad)

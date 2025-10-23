@@ -18,8 +18,8 @@ class CIFAR10Dataset(Dataset):
         self.train = train
         self.images = []
         self.labels = []
+        self.categories = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
-        path_files = []
         if self.train:
             path_files = [str(PROJECT_ROOT_DIR.joinpath(root, '{}'.format(x.name))) for x in Path(root).iterdir() if 'data_batch_' in x.name]
         else:
@@ -34,8 +34,5 @@ class CIFAR10Dataset(Dataset):
         return len(self.labels)
 
     def __getitem__(self, index):
-        return self.images[index], self.labels[index]
-
-if __name__ == '__main__':
-    dataset = CIFAR10Dataset(root='datasets/cifar-10-batches-py', train=True)
-    img, label = dataset.__getitem__(1000)
+        img = torch.from_numpy(self.images[index].reshape(3, 32, 32)).float() / 255
+        return img, self.labels[index]

@@ -6,39 +6,42 @@ sys.path.append(str(ROOT_DIR))
 
 from neural_network.neural_network import SimpleNeuralNetwork
 from build_datasets.animals_dataset import AnimalsDataset
+from build_datasets.cifar_dataset import CIFAR10Dataset
+from build_datasets.mnist_dataset import MnistDataset
 import torch
 import torch.nn as nn
 from torchvision.transforms import Compose, ToTensor, Resize
 from torch.utils.data import DataLoader
 from sklearn.metrics import classification_report
+from cnn.lenet import LeNet
 
 
-if __name__ == '__main__':
+def train_nn():
     num_epochs = 100
 
     transforms = Compose([
         ToTensor(),
         Resize((200, 200))
-    ]) 
-    
+    ])
+
     data_train = AnimalsDataset(root='datasets/animals', train=True, transforms=transforms)
     training_dataloader = DataLoader(
-        dataset = data_train,
-        batch_size = 32,
-        shuffle = True,
-        num_workers = 1,
-        drop_last = True
+        dataset=data_train,
+        batch_size=32,
+        shuffle=True,
+        num_workers=1,
+        drop_last=True
     )
 
     data_test = AnimalsDataset(root='datasets/animals', train=False, transforms=transforms)
     test_dataloader = DataLoader(
-        dataset = data_test,
-        batch_size = 32,
-        shuffle = False,
-        num_workers = 1,
-        drop_last = False
+        dataset=data_test,
+        batch_size=32,
+        shuffle=False,
+        num_workers=1,
+        drop_last=False
     )
-    
+
     model = SimpleNeuralNetwork(num_classes=len(data_train.categories))
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
@@ -55,7 +58,8 @@ if __name__ == '__main__':
 
             output = model(images)
             loss = criterion(output, labels)
-            print('Epoch: [{}]/[{}] | Iteration: [{}]/[{}] | Loss: {:4f}'.format(epoch, num_epochs, i, len(training_dataloader), loss))
+            print('Epoch: [{}]/[{}] | Iteration: [{}]/[{}] | Loss: {:4f}'.format(epoch, num_epochs, i,
+                                                                                 len(training_dataloader), loss))
 
             optimizer.zero_grad()
             loss.backward()
@@ -71,14 +75,87 @@ if __name__ == '__main__':
                 labels = labels.cuda()
 
             with torch.no_grad():
-                predictions = model(images)   # predictions shape 64x10
+                predictions = model(images)  # predictions shape 64x10
                 indices = torch.argmax(predictions.cpu(), dim=1)
                 all_predictions.extend(indices)
                 loss_value = criterion(predictions, labels)
         all_labels = [label.item() for label in all_labels]
         all_predictions = [prediction.item() for prediction in all_predictions]
-        print("Epoch {}".format(epoch+1))
+        print("Epoch {}".format(epoch + 1))
         print(classification_report(all_labels, all_predictions))
+
+def train_le_net():
+    num_epochs = 100
+
+    transforms = Compose([
+        ToTensor()
+    ])
+
+    data_train = MnistDataset(root='datasets/mnist', train=True, transforms=transforms)
+    training_dataloader = DataLoader(
+        dataset = data_train,
+        batch_size = 32,
+        shuffle = True,
+        num_workers = 1,
+        drop_last = True
+    )
+
+    data_test = MnistDataset(root='datasets/mnist', train=False, transforms=transforms)
+    test_dataloader = DataLoader(
+        dataset = data_test,
+        batch_size = 32,
+        shuffle = False,
+        num_workers = 1,
+        drop_last = False
+    )
+
+    model = LeNet(len(data_train.categories))
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+
+    if torch.cuda.is_available():
+        model.cuda()
+
+    for epoch in range(num_epochs):
+        model.train()
+        for i, (images, labels) in enumerate(training_dataloader):
+            if torch.cuda.is_available():
+                images = images.cuda()
+                labels = labels.cuda()
+            output = model(images)
+            loss = criterion(output, labels)
+            if i % 100 == 0 or i == len(training_dataloader) - 1:
+                print(f'Epoch[{epoch}][{num_epochs}] | Iteration: [{i}][{len(training_dataloader)}] | Loss: {loss.item():.4f}')
+
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+
+        model.eval()
+        all_predictions = []
+        all_labels = []
+        loss_values = 0
+        for i, (images, labels) in enumerate(test_dataloader):
+            if torch.cuda.is_available():
+                images = images.cuda()
+                labels = labels.cuda()
+
+            with torch.no_grad():
+                predictions = model(images)
+                indices = torch.argmax(predictions, dim=1)
+                all_labels.extend(labels)
+                all_predictions.extend(indices)
+                loss_values += criterion(predictions, labels).item()
+
+        all_labels = [label.item() for label in all_labels]
+        all_predictions = [prediction.item() for prediction in all_predictions]
+        print(f'Validation Epoch: {epoch} | loss: {loss_values / len(test_dataloader):.4f}')
+        print(classification_report(all_labels, all_predictions))
+
+if __name__ == '__main__':
+    train_le_net()
+
+
 
 
 
